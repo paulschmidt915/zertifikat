@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zertifikat Generator</title>
+    <style>
+        body {
+            font-family: Verdana, Geneva, Tahoma, sans-serif, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        input, button {
+            font-family: Verdana, Geneva, Tahoma, sans-serif, sans-serif;
+            font-size: 18px;
+            padding: 10px;
+            margin: 10px;
+        }
+        
+        #image-container {
+            margin-top: 20px;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Herzlichen Glückwunsch!</h1>
+    <input type="text" id="name" placeholder="Gib deinen Namen ein">
+    <button onclick="generateCertificate()">Zertifikat erstellen</button>
+
+    <div id="image-container">
+        <img src="Bild.jpg" alt="Bild">
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script>
+        async function generateCertificate() {
+            const name = document.getElementById('name').value;
+            if (name === '') {
+                alert('Bitte gib deinen Namen ein.');
+                return;
+            }
+
+            const existingPdfBytes = await fetch('Zertifikat.pdf').then(res => res.arrayBuffer());
+            const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
+            const pages = pdfDoc.getPages();
+            const firstPage = pages[0];
+
+            const { width } = firstPage.getSize();
+            const fontSize = 30;
+            const font = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+            const textWidth = font.widthOfTextAtSize(name, fontSize);
+
+            firstPage.drawText(name, {
+                x: 290 - textWidth / 2,
+                y: 490,
+                size: fontSize,
+                font: font,
+                color: PDFLib.rgb(0, 0, 0),
+            });
+
+            const pdfBytes = await pdfDoc.save();
+            const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = 'Zertifikat.pdf';
+            link.click();
+        }
+    </script>
+</body>
+</html>
